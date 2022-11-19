@@ -3,8 +3,6 @@
 Пользователь имеет возможность изменять имя и свой пароль, а также отправлять в чат сообщения
  */
 
-import com.didisoft.pgp.PGPException;
-
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -56,40 +54,50 @@ public class Profil {
         this.password = new_password;
     }
 
-    public void sendMessage(String message) throws IOException, PGPException {
+    public void sendMessage(String message) throws Exception {
         //Метод осуществляет отправку вообщения (пока что запись в файл)
-        BufferedWriter fw = null;
+        BufferedWriter fw;
         boolean is_empty = false;
-        EncryptMessage crypt = new EncryptMessage();
+        EncryptPGP encrypter = new EncryptPGP();
 
         EmptyMessageException space = new EmptyMessageException();
+        if (message.equals("")) {
+            space.nameEmpty();
+            is_empty = true;
+        }
         try {
             FileWriter writer = new FileWriter("Reading.txt", true);
+            FileWriter encrypt_write = new FileWriter("Encrypted.txt", true);
             fw = new BufferedWriter(writer);
             if (!is_empty) {
-                fw.write(this.getNameUser() + " " + new Date() + ": " + crypt.Encrypt(message));
+                fw.write(this.getNameUser() + " " + new Date() + ": " + message);
                 fw.write("\n");
+                try {
+                    encrypt_write.write(this.getNameUser() + " " + new Date() + ": " + encrypter.encrypt(message));
+                    encrypt_write.write("\n");
+                    encrypt_write.close();
+                } catch (Exception e) {
+                    System.out.println("Возникла ошибка шифрования" + "\n" + e);
+                }
             } else {
                 fw.write(this.getNameUser() + " " + new Date() + " попытался отправить пустое сообщение.");
+                fw.close();
             }
         } catch (FileNotFoundException e) {
             System.out.println("Произошла ошибка: нет нужного файла, чтобы записать сообщение. Сорри");
         } catch (IOException e) {
             System.out.println("Возникла какая-то ошибка ввода. Попробуйте ещё раз отправить сообщение");
         }
-        catch (PGPException a) {
-            System.out.println ("У нас какие-то проблемы с шифрованием, чат пока не работатб");
-        }
-        fw.close();
     }
 
-    public boolean setTelephone(String number) throws WrongTelephoneNumberException {
-        Telephone number_test = new Telephone(number);
-        if (number_test.getValid()) {
+    public void setTelephone(String number) {
+        try {
+            Telephone number_test;
+            number_test = new Telephone(number);
             this.telephone = number_test.getNumber();
-            return true;
+        } catch (WrongTelephoneNumberException e) {
+            System.out.println("Формат номера неверен, задать его невозможно");
         }
-        return false;
     }
 
     public String getTelephone() {

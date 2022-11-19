@@ -1,18 +1,14 @@
-import com.didisoft.pgp.PGPException;
-
-import java.io.IOException;
-import java.util.Scanner;
-import java.lang.Math;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException, EmptyMessageException, WrongTelephoneNumberException, PGPException {
+    public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
         System.out.println("Сколько аккаунтов Вы намерены внести?");
         boolean logic;
         int n = 0;
         do {
-            logic = false;
             try {
                 logic = true;
                 n = sc.nextInt();
@@ -38,16 +34,17 @@ public class Main {
             System.out.println("Создан пользователь:");
             System.out.println(example.getLogin() + " " + example.getTeg());
             boolean flag = false;
+            Telephone cifres;
             do {
                 System.out.println("Введите Ваш номер телефона в любом виде:");
                 String number = sc.next();
                 try {
-                    Telephone cifres = new Telephone(number);
+                    cifres = new Telephone(number);
                 } catch (WrongTelephoneNumberException e) {
                     System.out.println("Номер не задан. Проверьте правильность ввода");
                     continue;
                 }
-                example.setTelephone(number);
+                example.setTelephone(cifres.getNumber());
                 System.out.println("Задан номер");
                 System.out.println(example.getTelephone());
                 flag = true;
@@ -56,10 +53,10 @@ public class Main {
             k += 1;
         }
         String login = "";
-        while (!(login.toLowerCase()).equals("stop")) {
+        while (!(login).equalsIgnoreCase("stop")) {
             System.out.println("Введите логин, чтобы залогониться, stop, чтобы прервать переписку");
             login = sc.next();
-            if ((login.toLowerCase()).equals("stop")) {
+            if ((login).equalsIgnoreCase("stop")) {
                 break;
             }
             Profil log = null;
@@ -71,12 +68,11 @@ public class Main {
                     String passw = sc.next();
                     if (!i.getPassword().equals(passw)) {
                         System.out.println("Пароль неверен, залогиниться не вышло!");
-                        break;
                     } else {
                         System.out.println("Вы вошли, можете писать сообщения! logout, чтобы выйти из аккаунта");
                         log = i;
-                        break;
                     }
+                    break;
                 } else {
                     counter += 1;
                 }
@@ -86,14 +82,18 @@ public class Main {
                 continue;
             }
             String message = "";
-            while (!(message.toLowerCase()).equals("logout")) {
+            while (!(message).equalsIgnoreCase("logout")) {
                 message = sc.nextLine();
                 message = message.strip();
-                if (!(message.toLowerCase()).equals("logout")) {
-                    log.sendMessage(message);
+                if (!(message).equalsIgnoreCase("logout")) {
+                    try {
+                        Objects.requireNonNull(log).sendMessage(message);
+                    } catch (Exception e) {
+                        System.out.println("Произошла ошибка при логировании" + "\n" + e);
+                    }
                 }
             }
         }
-        sc.close();
+            sc.close();
     }
 }
